@@ -22,6 +22,31 @@ describe('AbortSignalLite', () => {
   })
 
   describe('static any()', () => {
+    test('should accept an empty array and return a non-aborted signal', () => {
+      const signal = AbortSignalLite.any([])
+      expect(signal.aborted).toBe(false)
+    })
+
+    test('should accept plain Iterable as input', () => {
+      const signal1 = createActiveSignal()
+      const signal2 = createActiveSignal()
+
+      const signal = AbortSignalLite.any({
+        * [Symbol.iterator]() {
+          yield signal1
+          yield signal2
+        },
+      })
+
+      expect(signal.aborted).toBe(false)
+
+      const reason = new Error('Signal 1 aborted')
+      signal1._abort(reason)
+
+      expect(signal.aborted).toBe(true)
+      expect(signal.reason).toBe(reason)
+    })
+
     test('should be aborted if any input signal is already aborted', () => {
       const abortedSignal = AbortSignalLite.abort(new Error('Already aborted'))
       const activeSignal = createActiveSignal()
