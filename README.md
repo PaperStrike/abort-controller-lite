@@ -1,5 +1,8 @@
 # abort-controller-lite
 
+[![npm Package](https://img.shields.io/npm/v/abort-controller-lite?logo=npm)](https://www.npmjs.com/package/abort-controller-lite "abort-controller-lite")
+[![Compressed Minified Size](https://img.shields.io/bundlejs/size/abort-controller-lite?label=minzipped&color=ff69b4)](#abort-controller-lite "Gzipped bundle size")
+
 Ultra‑small (no globals, no heavy polyfill machinery) subset of AbortController / AbortSignal for runtimes missing the standard.
 
 Targets:
