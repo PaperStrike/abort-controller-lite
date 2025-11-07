@@ -1,0 +1,60 @@
+{
+  "name": "abort-controller-lite",
+  "version": "0.0.0",
+  "description": "Lightweight abort controller for async operations",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./build/index.js",
+  "exports": {
+    ".": {
+      "types": "./build/index.d.ts",
+      "import": "./build/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "test": "jest",
+    "clean": "node -e \"fs.rmSync('build', { recursive: true, force: true })\"",
+    "build": "pnpm build:type && pnpm build:js",
+    "build:type": "tsc -b --noCheck --emitDeclarationOnly",
+    "build:js": "esbuild src/index.ts --outdir=build --target=es2022 --format=esm --packages=external --sourcemap --bundle --minify",
+    "lint": "eslint .",
+    "prepare": "pnpm build"
+  },
+  "keywords": [
+    "abort",
+    "cancel",
+    "abortcontroller",
+    "abortsignal",
+    "controller",
+    "signal"
+  ],
+  "repository": "github:PaperStrike/abort-controller-lite",
+  "license": "MIT",
+  "files": [
+    "build",
+    "!build/cache",
+    "!*.tsbuildinfo",
+    "CHANGELOG.*"
+  ],
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
+  },
+  "devDependencies": {
+    "@eslint/compat": "^1.4.1",
+    "@eslint/js": "^9.39.1",
+    "@eslint/markdown": "^7.5.1",
+    "@stylistic/eslint-plugin": "^5.5.0",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.10.0",
+    "dedent": "^1.7.0",
+    "esbuild": "^0.25.12",
+    "eslint": "^9.39.1",
+    "jest": "^30.2.0",
+    "jest-leak-detector": "^30.2.0",
+    "ts-jest": "^29.4.5",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.3"
+  },
+  "packageManager": "pnpm@10.20.0+sha512.cf9998222162dd85864d0a8102e7892e7ba4ceadebbf5a31f9c2fce48dfce317a9c53b9f6464d1ef9042cba2e02ae02a9f7c143a2b438cd93c91840f0192b9dd"
+}

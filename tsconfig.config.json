@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "allowJs": true,
+    "noEmit": true,
+    "tsBuildInfoFile": "./build/cache/config.tsbuildinfo",
+    "types": ["node"]
+  },
+  "include": [
+    "eslint.config.mjs",
+    "jest.config.mjs"
+  ]
+}
