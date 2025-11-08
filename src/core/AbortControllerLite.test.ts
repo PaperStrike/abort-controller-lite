@@ -35,6 +35,20 @@ describe('AbortControllerLite', () => {
     expect(calls).toEqual([1, 2])
   })
 
+  test('listeners should have "this" set to the signal', () => {
+    const controller = new AbortControllerLite()
+    let thisValue: unknown = null
+
+    controller.signal.addEventListener('abort', function () {
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
+      thisValue = this
+    })
+
+    controller.abort()
+
+    expect(thisValue).toBe(controller.signal)
+  })
+
   test('removing listener should prevent it from being called', () => {
     const controller = new AbortControllerLite()
     const calls: number[] = []
