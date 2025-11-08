@@ -31,8 +31,8 @@ Not a drop‑in polyfill. It’s intentionally smaller and simpler. Key differen
 - `AbortSignalLite.any(iterable)` memory semantics
   - Immediate: if any input is already aborted, the result aborts immediately with that `reason`.
   - Native engines maintain internal weak source/dependent lists so combined signals don’t keep inputs alive and vice‑versa.
-  - In pure JS we can’t mirror that precisely: we must attach strong listeners to each source and close over the combined signal. We intentionally avoid `WeakRef`/`FinalizationRegistry` to keep size/complexity low.
-  - Consequence: if you drop all references to the combined signal before any source aborts, the sources still hold listeners that keep the combined signal (and its captured array) alive. Cleanup only happens when one source aborts.
+  - In pure JS we can’t mirror that precisely: we must keep strong references to each source and close over the combined signal. We intentionally avoid `WeakRef`/`FinalizationRegistry` to keep size/complexity low.
+  - Consequence: if you drop all references to the combined signal before any source aborts, the source signals still hold internal references that keep the combined signal (and its captured arrays) alive. Those references are only cleared when one of the sources aborts.
   - Practical guidance: use `any()` for short‑lived operations; avoid creating many long‑lived combined signals.
 
 - `AbortSignalLite.timeout(ms)`
