@@ -17,7 +17,7 @@
     "clean": "node -e \"fs.rmSync('build', { recursive: true, force: true })\"",
     "build": "pnpm build:type && pnpm build:js",
     "build:type": "tsc -b --noCheck --emitDeclarationOnly",
-    "build:js": "esbuild src/index.ts --outdir=build --target=es2022 --format=esm --packages=external --sourcemap --bundle --minify",
+    "build:js": "esbuild src/index.ts --outdir=build --target=es2019 --format=esm --packages=external --sourcemap --bundle --minify",
     "lint": "eslint .",
     "prepare": "pnpm build"
   },
