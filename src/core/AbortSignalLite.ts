@@ -26,14 +26,14 @@ export default class AbortSignalLite implements AbortSignalLike {
   }
 
   /** @internal */
-  private _abortListeners = new Set<(this: this) => void>()
+  private _listeners = new Set<(this: this) => void>()
 
   public addEventListener(type: string, listener: (this: this) => void) {
-    if (type === 'abort') this._abortListeners.add(listener)
+    if (type === 'abort') this._listeners.add(listener)
   }
 
   public removeEventListener(type: string, listener: (this: this) => void) {
-    if (type === 'abort') this._abortListeners.delete(listener)
+    if (type === 'abort') this._listeners.delete(listener)
   }
 
   /** @internal */
@@ -87,10 +87,10 @@ export default class AbortSignalLite implements AbortSignalLike {
       dependent._sources = undefined
     }
 
-    invokeAndClear(this._abortListeners, this)
+    invokeAndClear(this._listeners, this)
 
     for (const dependent of dependents) {
-      invokeAndClear(dependent._abortListeners, dependent)
+      invokeAndClear(dependent._listeners, dependent)
     }
   }
 
