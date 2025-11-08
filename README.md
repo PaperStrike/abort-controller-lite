@@ -20,7 +20,7 @@ Not a drop‑in polyfill. It’s intentionally smaller and simpler. Key differen
 
 - Event model
   - No EventTarget. Listeners are plain functions, invoked as `listener.call(signal)` with no Event object.
-  - No `onabort` property, no options (`once`, `signal`, `capture`, et c.) to `addEventListener`, no `dispatchEvent`.
+  - No `onabort` property, no options (`once`, `signal`, `capture`, etc.) to `addEventListener`, no `dispatchEvent`.
   - After the first abort we clear listeners to save memory; manual re‑dispatch isn’t supported. Effectively behaves like `{ once: true }` because an abort happens at most once and listeners are removed.
   - Listeners removed during an abort are not invoked; this matches the behavior of DOM event dispatch. But listeners added during an abort may be invoked if added before we finish invoking existing listeners, this differs from DOM behavior.
 
