@@ -69,6 +69,7 @@ export default class AbortSignalLite implements AbortSignalLike {
     for (const dependent of this._dependents) {
       if (!dependent.aborted) {
         dependent._reason = reason
+        dependent._sources = undefined
         dependentsToAbort.push(dependent)
       }
     }
@@ -79,7 +80,6 @@ export default class AbortSignalLite implements AbortSignalLike {
 
     for (const dependent of dependentsToAbort) {
       invokeAndClear(dependent._abortListeners, dependent)
-      dependent._sources = undefined
     }
   }
 
