@@ -44,7 +44,7 @@ Not a drop‑in polyfill. It’s intentionally smaller and simpler. Key differen
 
 - Types and modules
   - ESM‑only package. Use import syntax; `require()` isn’t supported.
-  - Public types are `AbortControllerLike` and `AbortSignalLike` — lightweight subsets of the standard API. Anything that accepts an `AbortSignalLike` will also accept a standard `AbortSignal`.
+  - Public types are `AbortControllerLike` and `AbortSignalLike` — lightweight subsets of the standard API. A parameter typed `AbortSignalLike` is type‑compatible with the native `AbortSignal`; this is compile‑time only and does not guarantee identical runtime behavior or capabilities.
   - TypeScript flags direct construction (`new AbortSignalLite()`) as a type error, but nothing prevents it at runtime. The web standard throws here; we rely on discipline — stick to signals from the controller or the static helpers for the intended lifecycle.
 
 If you need exact spec behavior (DOMException types, EventTarget, GC semantics of `any`, timer unref, etc.), use the platform’s built‑ins where available.
