@@ -84,6 +84,25 @@ describe('AbortSignalLite', () => {
       expect(signal.aborted).toBe(true)
       expect(signal.reason).toBe(reason2)
     })
+
+    test('should run the listeners of the source signal first', () => {
+      const sourceSignal = createActiveSignal()
+      const signal = AbortSignalLite.any([sourceSignal])
+
+      const calls: string[] = []
+
+      signal.addEventListener('abort', () => {
+        calls.push('derived')
+      })
+
+      sourceSignal.addEventListener('abort', () => {
+        calls.push('source')
+      })
+
+      sourceSignal._abort()
+
+      expect(calls).toEqual(['source', 'derived'])
+    })
   })
 
   describe('static timeout()', () => {

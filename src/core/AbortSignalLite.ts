@@ -2,6 +2,24 @@ import AbortError from '../error/AbortError'
 import TimeoutError from '../error/TimeoutError'
 import type { AbortSignalLike } from './types'
 
+const invokeAndClear = <ThisArg>(listeners: Set<(this: ThisArg) => void>, thisArg: ThisArg) => {
+  for (const listener of listeners) {
+    try {
+      listener.call(thisArg)
+    }
+    catch (error) {
+      // async throw to avoid breaking the other listeners
+      setTimeout(() => {
+        throw error
+      }, 0)
+    }
+  }
+
+  // we don't want to support the rare case of manually dispatching abort events to retrigger listeners like the standard does.
+  // just release the memory.
+  listeners.clear()
+}
+
 export default class AbortSignalLite implements AbortSignalLike {
   private constructor() {
     // ts only check to prevent external construction
@@ -19,13 +37,16 @@ export default class AbortSignalLite implements AbortSignalLike {
   }
 
   /** @internal */
-  private _aborted = false
-
-  /** @internal */
   private _reason: unknown = undefined
 
+  /** @internal */
+  private _dependents = new Set<AbortSignalLite>()
+
+  /** @internal */
+  private _sources: Set<AbortSignalLite> | undefined
+
   public get aborted() {
-    return this._aborted
+    return this._reason !== undefined
   }
 
   public get reason() {
@@ -33,33 +54,33 @@ export default class AbortSignalLite implements AbortSignalLike {
   }
 
   public throwIfAborted() {
-    if (this._aborted) {
+    if (this.aborted) {
       throw this._reason
     }
   }
 
   /** @internal */
   public _abort(reason: unknown = new AbortError()) {
-    if (this._aborted) return
+    if (this.aborted) return
 
-    this._aborted = true
     this._reason = reason
 
-    this._abortListeners.forEach((listener) => {
-      try {
-        listener.call(this)
+    const dependentsToAbort: AbortSignalLite[] = []
+    for (const dependent of this._dependents) {
+      if (!dependent.aborted) {
+        dependent._reason = reason
+        dependentsToAbort.push(dependent)
       }
-      catch (error) {
-        // async throw to avoid breaking the other listeners
-        setTimeout(() => {
-          throw error
-        }, 0)
-      }
-    })
+    }
 
-    // we don't want to support the rare case of manually dispatching abort events to retrigger listeners like the standard does.
-    // just release the memory.
-    this._abortListeners.clear()
+    this._dependents.clear()
+
+    invokeAndClear(this._abortListeners, this)
+
+    for (const dependent of dependentsToAbort) {
+      invokeAndClear(dependent._abortListeners, dependent)
+      dependent._sources = undefined
+    }
   }
 
   public static abort(reason?: unknown): AbortSignalLike {
@@ -69,25 +90,29 @@ export default class AbortSignalLite implements AbortSignalLike {
   }
 
   public static any(signalsIterable: Iterable<AbortSignalLike>): AbortSignalLike {
-    const signals = Array.from(signalsIterable)
+    const signals = [...signalsIterable] as AbortSignalLite[]
     const resultSignal = new AbortSignalLite()
 
     for (const signal of signals) {
       if (signal.aborted) {
-        resultSignal._abort(signal.reason)
+        resultSignal._reason = signal.reason
         return resultSignal
       }
     }
 
-    function onAbort(this: AbortSignalLike) {
-      resultSignal._abort(this.reason)
-      for (const signal of signals) {
-        signal.removeEventListener('abort', onAbort)
-      }
-    }
+    resultSignal._sources = new Set<AbortSignalLite>()
 
     for (const signal of signals) {
-      signal.addEventListener('abort', onAbort)
+      if (!signal._sources) {
+        resultSignal._sources.add(signal)
+        signal._dependents.add(resultSignal)
+      }
+      else {
+        for (const sourceSignal of signal._sources) {
+          resultSignal._sources.add(sourceSignal)
+          sourceSignal._dependents.add(resultSignal)
+        }
+      }
     }
 
     return resultSignal
