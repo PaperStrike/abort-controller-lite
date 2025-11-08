@@ -1,3 +1,6 @@
 export default class TimeoutError extends Error {
-  public name = 'TimeoutError'
+  public constructor(message?: string) {
+    super(message)
+    this.name = 'TimeoutError'
+  }
 };

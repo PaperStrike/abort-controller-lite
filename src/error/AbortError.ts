@@ -1,3 +1,6 @@
 export default class AbortError extends Error {
-  public name = 'AbortError'
+  public constructor(message?: string) {
+    super(message)
+    this.name = 'AbortError'
+  }
 }

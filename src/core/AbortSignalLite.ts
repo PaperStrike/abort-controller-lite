@@ -60,7 +60,7 @@ export default class AbortSignalLite implements AbortSignalLike {
   }
 
   /** @internal */
-  public _abort(reason: unknown = new AbortError()) {
+  public _abort(reason: unknown = new AbortError('signal is aborted without reason')) {
     if (this.aborted) return
 
     this._reason = reason
@@ -122,7 +122,7 @@ export default class AbortSignalLite implements AbortSignalLike {
     const signal = new AbortSignalLite()
 
     setTimeout(() => {
-      signal._abort(new TimeoutError())
+      signal._abort(new TimeoutError('signal timed out'))
     }, ms)
 
     return signal
