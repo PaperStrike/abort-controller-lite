@@ -37,7 +37,7 @@ export default class AbortSignalLite implements AbortSignalLike {
   }
 
   /** @internal */
-  private _reason: unknown = undefined
+  private _reason: unknown
 
   /** @internal */
   private _dependents = new Set<AbortSignalLite>()
