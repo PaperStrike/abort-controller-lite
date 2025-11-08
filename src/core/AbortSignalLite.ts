@@ -65,20 +65,31 @@ export default class AbortSignalLite implements AbortSignalLike {
 
     this._reason = reason
 
-    const dependentsToAbort: AbortSignalLite[] = []
-    for (const dependent of this._dependents) {
-      if (!dependent.aborted) {
-        dependent._reason = reason
-        dependent._sources = undefined
-        dependentsToAbort.push(dependent)
-      }
-    }
-
+    // Note: This intentionally differs from the standard.
+    // The spec checks each dependent’s aborted state and caches the non-aborted set for later invocation.
+    // Here we can safely assume all dependents are not aborted, because once a dependent aborts,
+    // we immediately remove it from every source’s dependents set.
+    // The spec models relationships with conceptual “weak” sets and relies on GC to clean them up.
+    // In plain JS we cannot iterate WeakSet, so we use strong Sets and maintain them explicitly.
+    // https://dom.spec.whatwg.org/#abortsignal-signal-abort
+    const dependents = [...this._dependents]
     this._dependents.clear()
+
+    // Update dependents' aborted state before invoking any listeners
+    for (const dependent of dependents) {
+      dependent._reason = reason
+
+      // Eagerly remove the dependent from its sources
+      for (const source of dependent._sources!) {
+        source._dependents.delete(dependent)
+      }
+
+      dependent._sources = undefined
+    }
 
     invokeAndClear(this._abortListeners, this)
 
-    for (const dependent of dependentsToAbort) {
+    for (const dependent of dependents) {
       invokeAndClear(dependent._abortListeners, dependent)
     }
   }
@@ -95,7 +106,7 @@ export default class AbortSignalLite implements AbortSignalLike {
 
     for (const signal of signals) {
       if (signal.aborted) {
-        resultSignal._reason = signal.reason
+        resultSignal._reason = signal._reason
         return resultSignal
       }
     }
