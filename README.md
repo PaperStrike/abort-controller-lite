@@ -14,14 +14,15 @@ Targets:
 
 Not a drop‑in polyfill. It’s intentionally smaller and simpler. Key differences from the web standard:
 
-- Renamed types: `AbortController` → `AbortControllerLite` (interface `AbortControllerLike`); `AbortSignal` → `AbortSignalLite` (interface `AbortSignalLike`).
-
 - No global patching: this library never defines or mutates global AbortController/AbortSignal; import what you need.
+  - `AbortController` → `AbortControllerLite` (interface `AbortControllerLike`).
+  - `AbortSignal` → `AbortSignalLite` (interface `AbortSignalLike`).
 
 - Event model
   - No EventTarget. Listeners are plain functions, invoked as `listener.call(signal)` with no Event object.
-  - No `onabort` property, no options (`once`, `signal`) to `addEventListener`, no `dispatchEvent`.
+  - No `onabort` property, no options (`once`, `signal`, `capture`, et c.) to `addEventListener`, no `dispatchEvent`.
   - After the first abort we clear listeners to save memory; manual re‑dispatch isn’t supported. Effectively behaves like `{ once: true }` because an abort happens at most once and listeners are removed.
+  - Listeners removed during an abort are not invoked; this matches the behavior of DOM event dispatch. But listeners added during an abort may be invoked if added before we finish invoking existing listeners, this differs from DOM behavior.
 
 - Errors and `reason`
   - We use lightweight `Error` subclasses (`AbortError`, `TimeoutError`), not `DOMException`.
@@ -29,7 +30,7 @@ Not a drop‑in polyfill. It’s intentionally smaller and simpler. Key differen
 
 - `AbortSignalLite.any(iterable)` memory semantics
   - Immediate: if any input is already aborted, the result aborts immediately with that `reason`.
-  - Standard engines maintain internal weak source/dependent lists so combined signals don’t keep inputs alive and vice‑versa.
+  - Native engines maintain internal weak source/dependent lists so combined signals don’t keep inputs alive and vice‑versa.
   - In pure JS we can’t mirror that precisely: we must attach strong listeners to each source and close over the combined signal. We intentionally avoid `WeakRef`/`FinalizationRegistry` to keep size/complexity low.
   - Consequence: if you drop all references to the combined signal before any source aborts, the sources still hold listeners that keep the combined signal (and its captured array) alive. Cleanup only happens when one source aborts.
   - Practical guidance: use `any()` for short‑lived operations; avoid creating many long‑lived combined signals.
@@ -43,7 +44,7 @@ Not a drop‑in polyfill. It’s intentionally smaller and simpler. Key differen
 
 - Types and modules
   - ESM‑only package. Use import syntax; `require()` isn’t supported.
-  - Public types are `AbortControllerLike` and `AbortSignalLike`; they’re compatible with the standard’s surface you typically use (properties/methods listed in typings).
+  - Public types are `AbortControllerLike` and `AbortSignalLike` — lightweight subsets of the standard API. Anything that accepts an `AbortSignalLike` will also accept a standard `AbortSignal`.
   - TypeScript flags direct construction (`new AbortSignalLite()`) as a type error, but nothing prevents it at runtime. The web standard throws here; we rely on discipline — stick to signals from the controller or the static helpers for the intended lifecycle.
 
 If you need exact spec behavior (DOMException types, EventTarget, GC semantics of `any`, timer unref, etc.), use the platform’s built‑ins where available.
