@@ -22,7 +22,7 @@ Not a drop‑in polyfill. It’s intentionally smaller and simpler. Key differen
   - No EventTarget. Listeners are plain functions, invoked as `listener.call(signal)` with no Event object.
   - No `onabort` property, no options (`once`, `signal`, `capture`, etc.) to `addEventListener`, no `dispatchEvent`.
   - After the first abort we clear listeners to save memory; manual re‑dispatch isn’t supported. Effectively behaves like `{ once: true }` because an abort happens at most once and listeners are removed.
-  - Listeners removed during an abort are not invoked; this matches the behavior of DOM event dispatch. But listeners added during an abort may be invoked if added before we finish invoking existing listeners, this differs from DOM behavior.
+  - Listeners removed during an abort are not invoked if removed before invocation; this matches the behavior of DOM event dispatch. But listeners added during an abort may be invoked if added before we finish invoking existing listeners, this differs from DOM behavior.
 
 - Errors and `reason`
   - We use lightweight `Error` subclasses (`AbortError`, `TimeoutError`), not `DOMException`.
@@ -31,7 +31,7 @@ Not a drop‑in polyfill. It’s intentionally smaller and simpler. Key differen
 - `AbortSignalLite.any(iterable)` memory semantics
   - Immediate: if any input is already aborted, the result aborts immediately with that `reason`.
   - Native engines maintain internal weak source/dependent lists so combined signals don’t keep inputs alive and vice‑versa.
-  - In pure JS we can’t mirror that precisely: we must keep strong references to each source and close over the combined signal. We intentionally avoid `WeakRef`/`FinalizationRegistry` to keep size/complexity low.
+  - In pure JS we can’t mirror that precisely: because `WeakSet` is not iterable, we must keep strong references to sources and dependents and unlink them carefully to avoid leaks. While `WeakRef` and `FinalizationRegistry` could approximate an “iterable weak set”, they add complexity and overhead we avoid in this lightweight library, especially since those APIs are often unavailable or unreliable in our target environments.
   - Consequence: if you drop all references to the combined signal before any source aborts, the source signals still hold internal references that keep the combined signal (and its captured arrays) alive. Those references are only cleared when one of the sources aborts.
   - Practical guidance: use `any()` for short‑lived operations; avoid creating many long‑lived combined signals.
 
