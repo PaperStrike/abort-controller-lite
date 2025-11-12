@@ -153,6 +153,14 @@ describe('AbortControllerLite', () => {
     expect(calls).toEqual([1])
   })
 
+  test('throwIfAborted should not throw if not aborted', () => {
+    const controller = new AbortControllerLite()
+
+    expect(() => {
+      controller.signal.throwIfAborted()
+    }).not.toThrow()
+  })
+
   test('throwIfAborted should throw the reason if aborted', () => {
     const controller = new AbortControllerLite()
     const reason = new Error('Abort reason')
