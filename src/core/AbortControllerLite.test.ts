@@ -108,6 +108,37 @@ describe('AbortControllerLite', () => {
     expect(calls).toEqual([1])
   })
 
+  test('listeners added for other events should be ignored', () => {
+    const controller = new AbortControllerLite()
+    const calls: number[] = []
+
+    const listener = () => {
+      calls.push(1)
+    }
+
+    controller.signal.addEventListener('not-abort', listener)
+
+    controller.abort()
+
+    expect(calls).toEqual([])
+  })
+
+  test('listeners removed for other events should be ignored', () => {
+    const controller = new AbortControllerLite()
+    const calls: number[] = []
+
+    const listener = () => {
+      calls.push(1)
+    }
+
+    controller.signal.addEventListener('abort', listener)
+    controller.signal.removeEventListener('not-abort', listener)
+
+    controller.abort()
+
+    expect(calls).toEqual([1])
+  })
+
   test('abort() multiple times should have no effect after first', () => {
     const controller = new AbortControllerLite()
     const calls: number[] = []
