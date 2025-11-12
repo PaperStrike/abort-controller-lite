@@ -3,7 +3,12 @@ import TimeoutError from '../error/TimeoutError'
 import type { AbortSignalLike } from './types'
 
 const invokeAndClear = <ThisArg>(listeners: Set<(this: ThisArg) => void>, thisArg: ThisArg) => {
+  // The standard algorithm respects listener removal but not listener addition during dispatch.
+  // We use a snapshot to achieve this.
+  const snapshot = new WeakSet(listeners)
   for (const listener of listeners) {
+    if (!snapshot.has(listener)) continue
+
     try {
       listener.call(thisArg)
     }

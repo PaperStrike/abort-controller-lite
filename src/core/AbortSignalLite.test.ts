@@ -105,6 +105,27 @@ describe('AbortSignalLite', () => {
 
       expect(calls).toEqual(['source', 'derived'])
     })
+
+    test('should run derived listeners added by source listeners', () => {
+      const sourceSignal = createActiveSignal()
+      const signal = AbortSignalLite.any([sourceSignal])
+
+      const calls: string[] = []
+
+      sourceSignal.addEventListener('abort', () => {
+        signal.addEventListener('abort', () => {
+          calls.push('inner derived')
+        })
+      })
+
+      signal.addEventListener('abort', () => {
+        calls.push('outer derived')
+      })
+
+      sourceSignal._abort()
+
+      expect(calls).toEqual(['outer derived', 'inner derived'])
+    })
   })
 
   describe('static timeout()', () => {

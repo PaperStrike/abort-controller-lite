@@ -49,7 +49,7 @@ describe('AbortControllerLite', () => {
     expect(thisValue).toBe(controller.signal)
   })
 
-  test('removing listener should prevent it from being called', () => {
+  test('listeners removed before abort should not be called', () => {
     const controller = new AbortControllerLite()
     const calls: number[] = []
 
@@ -67,6 +67,45 @@ describe('AbortControllerLite', () => {
     controller.abort()
 
     expect(calls).toEqual([2])
+  })
+
+  test('listeners removed during abort should not be called', () => {
+    const controller = new AbortControllerLite()
+    const calls: number[] = []
+
+    const listener1 = () => {
+      calls.push(1)
+      controller.signal.removeEventListener('abort', listener2)
+    }
+    const listener2 = () => {
+      calls.push(2)
+    }
+
+    controller.signal.addEventListener('abort', listener1)
+    controller.signal.addEventListener('abort', listener2)
+
+    controller.abort()
+
+    expect(calls).toEqual([1])
+  })
+
+  test('listeners added during abort should not be called', () => {
+    const controller = new AbortControllerLite()
+    const calls: number[] = []
+
+    const listener1 = () => {
+      calls.push(1)
+      controller.signal.addEventListener('abort', listener2)
+    }
+    const listener2 = () => {
+      calls.push(2)
+    }
+
+    controller.signal.addEventListener('abort', listener1)
+
+    controller.abort()
+
+    expect(calls).toEqual([1])
   })
 
   test('abort() multiple times should have no effect after first', () => {
