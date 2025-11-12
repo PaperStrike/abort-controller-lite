@@ -14,6 +14,7 @@
   },
   "scripts": {
     "test": "jest",
+    "coverage": "jest --coverage",
     "clean": "node -e \"fs.rmSync('build', { recursive: true, force: true })\"",
     "build": "pnpm build:type && pnpm build:js",
     "build:type": "tsc -b --noCheck --emitDeclarationOnly",
